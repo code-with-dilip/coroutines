@@ -25,9 +25,22 @@ class TokenRetrieverCoRoutine {
 
 }
 
-fun main(args : Array<String>) {
-    GlobalScope.launch {
+fun invokeCorouteInaLoop(){
+    (0..9).forEach {
+        GlobalScope.launch {
+            TokenRetrieverCoRoutine().invokeService()
+        }
+    }
+}
+
+fun  invokeCoroutine(){
+   val job =  GlobalScope.launch {
         TokenRetrieverCoRoutine().invokeService()
     }
+    job.invokeOnCompletion { println("job completed") }
+}
+fun main(args: Array<String>) {
+    invokeCoroutine()
+  //  invokeCorouteInaLoop()
     Thread.sleep(3000)
 }

@@ -59,5 +59,47 @@ fun invokeService() {
 
 ## Kotlin Co-Routines
 
-- Kotlin coroutines are going to let you write the code in a natural way.   
+-   Kotlin coroutines are going to let you write the code in a natural way.
+-   Code looks like you writing the blocking code.
+
+### suspend functions
+
+-   This is an indicator for Kotlin that this function will be executed asynchronously.
+
+```aidl
+suspend fun invokeService() {
+        val token = retrieveToken()
+        val result = this.externalCall(token)
+        logger.info("Result is $result")
+    }
+```   
+
+### How to invoke a Coroutine? - Using CoroutineBuilders
+
+-   The normall way of invoking the coroutine using the **coroutine builder**
+    -   **launch{}** is basically a coroutine builder which behaves like a fire and forget call
+        -   This creates a coroutine and forget about it
+        -   The execution happens behind the scenes in a thread pool 
+    -   **async{}**
+        -   returns a value from a coroutine.
+        -   Use **async** when there is a value thats going to be returned from the coroutine.
+
+```aidl
+ GlobalScope.launch {
+        TokenRetrieverCoRoutine().invokeService()
+    }
+```
+- Invoking coroutine in a loop. No special code is needed if corouteine is invoked in a loop.
+
+```aidl
+(0..9).forEach {
+        GlobalScope.launch {
+            TokenRetrieverCoRoutine().invokeService()
+        }
+    }
+```
+
+## TODO
+
+- await() when would you use it?
      
