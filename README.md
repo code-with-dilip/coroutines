@@ -99,7 +99,11 @@ suspend fun invokeService() {
     }
 ```
 
+## Kotlin's approach to async
+
+-   **suspend** -> Use suspending functions for sequential behavior
+-   **async** ->   Use async for concurrent behavior
+
 ## TODO
 
-- await() when would you use it?
      
