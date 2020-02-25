@@ -21,8 +21,6 @@ class TokenRetrieverCoRoutine {
         val result = this.externalCall(token)
         logger.info("Result is $result")
     }
-
-
 }
 
 fun invokeCorouteInaLoop(){

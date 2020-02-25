@@ -74,7 +74,7 @@ suspend fun invokeService() {
     }
 ```   
 
-### How to invoke a Coroutine? - Using CoroutineBuilders
+### CoroutineBuilders
 
 -   The normall way of invoking the coroutine using the **coroutine builder**
     -   **launch{}** is basically a coroutine builder which behaves like a fire and forget call
@@ -83,7 +83,10 @@ suspend fun invokeService() {
     -   **async{}**
         -   returns a value from a coroutine.
         -   Use **async** when there is a value thats going to be returned from the coroutine.
-
+    -   **runBlocking{}**
+        -   This coroutinebuilder runs the coroutine in the context of the invoker thread.        
+    -   **future{}**
+        -   This is coroutinebuilder returns the **CompletableFuture**
 ```aidl
  GlobalScope.launch {
         TokenRetrieverCoRoutine().invokeService()
@@ -104,6 +107,41 @@ suspend fun invokeService() {
 -   **suspend** -> Use suspending functions for sequential behavior
 -   **async** ->   Use async for concurrent behavior
 
-## TODO
+## What is a CoRoutine?
+
+-   Coroutines are light weight threads.
+-   Conceptually they are like threads
+
+### Coroutine vs Thread
+
+```aidl
+suspend fun coroutine_100000() {
+        val jobs = List(100_000) {
+            GlobalScope.launch {
+                delay(1000L)
+                print(".")
+            }
+        }
+        jobs.forEach { it.join() }
+    }
+
+```
+
+**Thread**  
+
+-   The below code will give this error **Exception in thread "main" java.lang.OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource limits reached**
+-   It is really not possible to create **100_000** threads in a decent hardware and thats the reason for the exception 
+
+```aidl
+fun thread_100000() {
+        val jobs = List(100_000) {
+            thread {
+                Thread.sleep(1000L)
+                print(".")
+            }
+        }
+        jobs.forEach { it.join() }
+    }
+```
 
      
