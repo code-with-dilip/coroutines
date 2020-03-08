@@ -1,29 +1,35 @@
 package com.learncoroutines.example
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mu.KLogging
 
 class TokenRetrieverCoRoutine {
     companion object : KLogging()
 
-    suspend fun retrieveToken(): String {
+    fun retrieveToken(): String {
         return "token"
     }
 
-    suspend fun externalCall(token: String): String {
+    fun externalCall(token: String): String {
         logger.info("Invoked the external servie")
         return "Success"
     }
 
     suspend fun invokeService() {
-        val token = retrieveToken()
-        val result = this.externalCall(token)
+        val token = withContext(Dispatchers.Default) {
+            retrieveToken()
+        }
+        val result = withContext(Dispatchers.Default) {
+            externalCall(token)
+        }
         logger.info("Result is $result")
     }
 }
 
-fun invokeCorouteInaLoop(){
+fun invokeCorouteInaLoop() {
     (0..9).forEach {
         GlobalScope.launch {
             TokenRetrieverCoRoutine().invokeService()
@@ -31,14 +37,15 @@ fun invokeCorouteInaLoop(){
     }
 }
 
-fun  invokeCoroutine(){
-   val job =  GlobalScope.launch {
+fun invokeCoroutine() {
+    val job = GlobalScope.launch {
         TokenRetrieverCoRoutine().invokeService()
     }
     job.invokeOnCompletion { println("job completed") }
 }
+
 fun main(args: Array<String>) {
     invokeCoroutine()
-  //  invokeCorouteInaLoop()
+    //  invokeCorouteInaLoop()
     Thread.sleep(3000)
 }
