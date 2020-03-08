@@ -62,6 +62,12 @@ fun invokeService() {
 -   Kotlin coroutines are going to let you write the code in a natural way.
 -   Code looks like you writing the blocking code.
 
+## What is a Co-Routine?
+
+- A Coroutine is something which can execute a piece of code in concurrent bits.
+    -   A **Co-Routine** provides a state for a function
+    -   A **Co-Routine** allows the code to have mutiple entry point. 
+
 ### suspend functions
 
 -   This is an indicator for Kotlin that this function will be executed asynchronously.
