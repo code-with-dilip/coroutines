@@ -100,3 +100,10 @@ val sm = object: CoroutineImple{
 
 }
 ```
+
+## What is a CoroutineContex?
+
+-   CoroutineContext is mainly used to control the thread execution of a given coroutine
+
+## Kotlin Coroutines in Practice
+

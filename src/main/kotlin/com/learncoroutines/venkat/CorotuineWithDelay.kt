@@ -16,12 +16,21 @@ fun subtask1() : String{
     return "Hello"
 
 }
+
+fun subtask2() : String{
+
+    Logger.logger.info("Inside subtask2")
+    sleep()
+    return "Hello"
+
+}
 suspend fun taskwithDelay(){
 
     Logger.logger.info("Inside taskwithDelay")
     withContext(Dispatchers.Default){
         subtask1()
     }
+    subtask2()
     withContext(Dispatchers.Default) {
         sleep()
     }
@@ -41,5 +50,8 @@ fun main() {
         launch(Dispatchers.Default) { taskwithDelay() }
         Logger.logger.info("After the Launch")
     }
+
+
+
 
 }

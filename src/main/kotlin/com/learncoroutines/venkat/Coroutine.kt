@@ -24,14 +24,19 @@ suspend fun taskc() {
 
 fun main() {
     println("start")
+
     runBlocking {
       //  launch { taska() }
-        launch { taskb() }
+        launch {
+            println("coroutineContext : $coroutineContext")
+            taskb()
+        }
         launch(Dispatchers.Default) { taska() }
         println("called taska and taskb from ${Thread.currentThread()}")
-
     }
+
     Executors.newSingleThreadExecutor().asCoroutineDispatcher().use { context -> //use function takes care of closing the executor
+        println("context : $context")
         runBlocking {
             launch(context) { taskc() }
         }
