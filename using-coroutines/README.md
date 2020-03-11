@@ -25,8 +25,10 @@ GlobalScope.launch {
 -   Coroutine Builder is fundamentally used to launch a **Coroutine context**.
 
 - Some Coroutine Builders are 
-    -    launch
-    -   runBlocking
+    -    launch 
+        -    Launches the coroutine and returns immediately
+    -   runBlocking - This is mainly used in the scope of testing or in the main function
+        -    Launches the coroutine and blocks the thread until the coroutine is executed.
     
 ### launch Coroutinebuilder
 
@@ -48,3 +50,25 @@ GlobalScope.launch {
 ```aidl
 delay(1000)
 ```
+
+- Making the whole main() function to be a coroutineBuilder 
+    -   The whole function below is a nonblocking
+    ```aidl
+           fun main() = runBlocking{
+           
+               launch {
+                   delay(1000) // This does not block the thread. Releases the thread and have the thread available to run other coroutines
+                   println("WORLD")
+                   //coroutine_100000()
+               }
+               print("Hello, ")
+                   dowork()
+           }
+           
+           suspend fun dowork() {
+           
+               delay(1500)
+           
+           }
+           ```
+### First CouRoutine Test
