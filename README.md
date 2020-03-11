@@ -66,7 +66,12 @@ fun invokeService() {
 
 - A Coroutine is something which can execute a piece of code in concurrent bits.
     -   A **Co-Routine** provides a state for a function
-    -   A **Co-Routine** allows the code to have mutiple entry point. 
+    -   A **Co-Routine** allows the code to have mutiple entry point.
+    -   CoRoutines can be thought of as a light weight objects
+    -   Basically they are state machine objects
+        -   Data for each state
+        -   index of the current state
+        -   Ability to wait patiently 
 
 ### suspend functions
 
