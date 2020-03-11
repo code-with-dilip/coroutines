@@ -72,3 +72,98 @@ delay(1000)
            
            }
            ```
+
+## Wait, Join and Cancel Coroutines
+
+### Join Coroutine
+
+-   This is used to join multiple coroutines
+-   The code gets blocked until the all the joined coroutines are finished
+
+### Job Interface
+
+-   launch() returns a job
+-   The Job interface can be used to perform the below operation:
+    -    Join coroutines using the **join** method in the Job interface
+    -    Status of the coroutines ( finished, canclled or active)
+
+#### Join Example
+
+```aidl
+ runBlocking {
+
+        val job = launch {
+            delay(1000)
+            println("World")
+        }
+        println("Hello , ")
+        job.join() // This waits until the coroutine completes.
+    }
+```
+
+### Cancelling Coroutine
+
+-   What if a coroutine runs too long and you would like to cancel it
+    -   Cancelling a coroutine should take care of the following
+        -   Releasing any resources
+        -   Handling Exceptions    
+    -   Cancel a coroutine is coperative
+        -   All the inbuilt suspending functions are cooperative
+            -   delay
+            -   yield
+    
+#### Cancel Example
+
+##### Approach 1
+-   job.cancel() and job.join() or job.cancelAndJoin() are the methods that are available as part of the job interface to perform cancel on a coroutine.
+ 
+```aidl
+    val job1 = launch {
+            repeat(1000) {
+                yield()
+                //delay(100)
+                print(".")
+
+            }
+        }        delay(2500)
+        /*job1.cancel()
+        job1.join()*/
+        job.cancelAndJoin()
+``` 
+
+-   In the above the code, its the **delay()** or the **yield()** function that's co-operating with each other and perform the cancellation of coroutine.
+
+##### Approach 2
+
+- Using the isActive Flag to check the status of the coroutine. 
+```aidl
+  val job1 = launch {
+            repeat(1000) {
+               if(!isActive) throw CancellationException()
+                yield()
+                //delay(100)
+                print(".")
+               // Thread.sleep(1)
+
+            }
+        }
+        delay(10)
+        job1.cancelAndJoin()
+        println("done")
+    }
+```
+
+-   Replaced the delay in the launch coroutine with Thread.sleep(). Here in this case the **cancelAndJoin()** wont cancel the coroutine.
+
+```aidl
+        val job1 = launch {
+            repeat(1000) {
+                Thread.sleep(100)
+                print(".")
+            }
+        }
+        delay(2500)
+        /*job1.cancel()
+        job1.join()*/
+        job.cancelAndJoin()
+```    
