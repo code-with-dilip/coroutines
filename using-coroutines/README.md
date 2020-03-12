@@ -167,3 +167,41 @@ delay(1000)
         job1.join()*/
         job.cancelAndJoin()
 ```    
+
+### Handling Exceptions in Coroutines
+
+-   Always throw the CancellationException in case of cancelling a **coroutine**.
+-   Exceptions in coroutine can be handled by adding a **try/catch** block to the code
+-   Have the finally block in there incase of releasing any resources
+
+```aidl
+ val job1 = launch {
+            try {
+                repeat(1000) {
+                    //if(!isActive) throw CancellationException()
+                    yield()
+                    //delay(100)
+                    print(".")
+                    // Thread.sleep(1)
+
+                }
+            } catch (ex: CancellationException) {
+                println("Cancellation exception : ${ex}")
+            } finally {
+                run {
+                    println("Close Resources if any")
+                }
+            }
+        }
+
+```
+
+## Creating your own Scope
+
+```aidl
+    val coroutine = CoroutineScope(Dispatchers.Default).launch {
+
+       println("Inside the Coroutine Scope")
+
+    }
+```
