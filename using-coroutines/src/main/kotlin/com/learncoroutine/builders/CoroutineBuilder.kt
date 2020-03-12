@@ -1,6 +1,5 @@
-package com.learncoroutine
+package com.learncoroutine.builders
 
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -13,7 +12,7 @@ fun main() = runBlocking{
         //coroutine_100000()
     }
     print("Hello, ")
-        dowork()
+    dowork()
 }
 
 suspend fun dowork() {

@@ -198,6 +198,32 @@ delay(1000)
 
 ### Adding a Timeout to the coroutine
 
+-   **withTimeout** or **withTimeoutOrNull** are the two methods that can be used to timeout on a coroutine
+    -   withtimeout -> This throws an exception in the event of a timeout
+    -   withTimeoutOrNull -> This returns null once the time is elapsed.
+    
+#### Example: 
+```aidl
+fun main() {
+    runBlocking {
+        //val job = withTimeout(100) {
+        val job = withTimeoutOrNull(100) {
+            repeat(1000) {
+                yield()
+                print(".")
+                Thread.sleep(1)
+            }
+        }
+        delay(100)
+
+        if(job==null){
+            println("timed out")
+        }
+
+    }
+}
+```
+
 
 ## Creating your own Scope
 
