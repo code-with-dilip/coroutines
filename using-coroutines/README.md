@@ -297,6 +297,112 @@ outer.cancelAndJoin()
 -   Cancelling just the children coroutine
 
 ```aidl
+    outer.cancelChildren()
+```
+
+## Returning Data From Coroutines
+
+-   Use **async** Coroutine Builder in case of getting the data from the coroutine builder
+-   **async** coroutine builder returns a **Deferred** object.
+    -   This coroutinebuilder invokes the function and returns immediately with the **Deffered** object
+-   **await()**
+    -   This function waits until the Deferred object completes and this is a blocked call.     
+
+```aidl
+fun main() {
+
+    val scope = CoroutineScope(Dispatchers.Default)
+    val job = scope.launch {
+        val r1 = async { doWorkOne() }
+
+        val r2 = async { doWorkTwo() }
+        log("result : ${r1.await() + r2.await()}")
+    }
+    runBlocking {
+        job.join()
+    }
+
+}
+``` 
+
+- **AsyncExample2**
+
+-   In this below example,
+    -   we have an **async** call and other is a regular method call inside the **coroutine**
+    -   **async** gets executed later after the regular method as per the code is designed 
+    -   The code gets executed concurrently
+
+```aidl
+suspend fun doWork(msg: String): String {
+    log("Working $msg ")
+    delay(300)
+    log("Working $msg")
+    return "Hello"
+}
+
+
+fun main() {
+
+    runBlocking {
+        val job = launch {
+            val r1 = async { doWork("First Job") }
+        }
+        doWork("Second Job")
+        job.join()
+    }
+
+}
+```
+
+### Make the whole function async
+
+```aidl
+fun main() {
+    val result = doWorkAsync("Hello")
+    runBlocking {
+        result.await()
+    }
+}
+
+fun doWorkAsync(msg: String)  : Deferred<String> =  CoroutineScope(Dispatchers.IO).async {
+    log("Started Working $msg ")
+    delay(300)
+    log("Completed Work $msg")
+    return@async "Hello"
+
+}
+```
+### Starting async Functions Lazily
+
+-   The actual coroutine gets executed only when we call the await method
+
+```aidl
+package com.learncoroutine.async
+
+import com.learncoroutine.context.log
+import kotlinx.coroutines.*
+
+
+suspend fun doWorkLazy(msg: String): String {
+    log("Working $msg ")
+    delay(200)
+    log("Completed Work $msg")
+    return "Hello"
+}
+
+
+fun main() = runBlocking {
+
+    val job = launch {
+        val result = async(start = CoroutineStart.LAZY) {
+            doWorkLazy("Hello")
+        }
+        result.await() // This executes the coroutine
+    }
+    job.join()
+    println("Completed")
+}
+
 
 ```
 ## Creating your own Local Scope
