@@ -224,6 +224,38 @@ fun main() {
 }
 ```
 
+## CoroutineContext
+
+-   All Coroutines run as part of the CoroutineContext.
+    -   This determines how the coroutine is going to behave.
+    -   The CoroutineContext is created by the launcher.
+    -   The context provides a **dispatcher** which determines which Thread is going to run the coroutine
+-   The Context has the following Dispatcher has the following options  
+    -   UnConfined
+        -   This executes on the thread where the coroutine is executed
+        -   It switches to a different thread based on the suspending function thats used within the coroutine
+    -   coroutineContext
+    -   CommonPool
+    -   newSingleThreadContext
+    -   DefaultDispatcher
+     
+### UnConfined
+-   This executes on the thread where the coroutine is executed
+-   It switches to a different thread based on the suspending function thats used within the coroutine
+
+```
+fun main() = runBlocking {
+    val jobs = arrayListOf<Job>()
+    jobs += launch(Dispatchers.Unconfined) {
+        println("coroutineContext : I am working in thread [${Thread.currentThread().name}]")
+        delay(100)
+        //yield()
+        println("coroutineContext : After Delay in thread [${Thread.currentThread().name}]")
+    }
+
+}
+```
+
 
 ## Creating your own Scope
 
