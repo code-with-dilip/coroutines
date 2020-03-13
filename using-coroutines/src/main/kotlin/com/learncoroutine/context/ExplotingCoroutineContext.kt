@@ -1,6 +1,7 @@
 package com.learncoroutine.context
 
 import kotlinx.coroutines.*
+import java.util.concurrent.Executors
 
 
 private fun CoroutineScope.createJobs(jobs: ArrayList<Job>) {
@@ -19,6 +20,8 @@ private fun CoroutineScope.createJobs(jobs: ArrayList<Job>) {
         println("coroutineContext in thread ${Thread.currentThread().name}")
     }
 
+
+
     jobs += launch(newSingleThreadContext("OwnThread")) {
         println("newSingleThreadContext in thread ${Thread.currentThread().name}")
     }
@@ -26,20 +29,18 @@ private fun CoroutineScope.createJobs(jobs: ArrayList<Job>) {
 }
 
 
-
 fun main() = runBlocking {
 
+    val jobs = arrayListOf<Job>()
+    createJobs(jobs)
+
+    val job = launch {
+        println("launched thread ${Thread.currentThread().name}")
         val jobs = arrayListOf<Job>()
         createJobs(jobs)
-
-        val job = launch {
-            println("launched thread ${Thread.currentThread().name}")
-            val jobs = arrayListOf<Job>()
-            createJobs(jobs)
-            jobs.forEach{ it.join()}
-        }
-        job.join()
-        jobs.forEach{ it.join()}
-
-
+        jobs.forEach { it.join() }
+    }
+    job.join()
+    jobs.forEach { it.join() }
 }
+

@@ -256,13 +256,58 @@ fun main() = runBlocking {
 }
 ```
 
+### Accessing a Job from coroutinecontext
 
-## Creating your own Scope
+-   The **coroutinecontext** has the handy method to access the 
 
 ```aidl
-    val coroutine = CoroutineScope(Dispatchers.Default).launch {
+val job = launch {
+        println("isActive ? : ${coroutineContext[Job]!!.isActive}")
+        println("coroutineContext : $coroutineContext")
+    }
+```
 
-       println("Inside the Coroutine Scope")
+### Parent-Child Coroutines
 
+-   Normally this relationship is established only when coroutines are nested.
+
+-   The only to establish the relationship is by passing the **coroutineContext** to the child coroutine.
+
+```aidl
+ val outer = launch { //outer coroutine
+        launch(coroutineContext) {//inner coroutine
+            repeat(1000) {
+                println("$it")
+                delay(1)
+            }
+        }
+
+    }
+    outer.join() // this will wait until the child coroutine completes its execution
+```
+
+#### Canceling the Coroutine in a parent/child relationship
+
+- Cancelling the parentcoroutine automatically cancels the child coroutine too
+
+```aidl
+outer.cancelAndJoin()
+```
+
+-   Cancelling just the children coroutine
+
+```aidl
+
+```
+## Creating your own Local Scope
+
+```aidl
+    suspend fun main(){
+    
+        val scope = CoroutineScope(Dispatchers.Default)
+        val job = scope.launch {
+            log("invoked inside localscopoe")
+        }
+        job.join()
     }
 ```
