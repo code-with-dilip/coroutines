@@ -462,13 +462,13 @@ fun main() = runBlocking {
 }
 ```
 
-### Producer/Consumer CoroutineBuilder channel Functions
+### Producer/Consumer channel CoroutineBuilder  Functions
 
 -   There is a handy **produce** corouting builder which takes care of producing the elements
     -   This coroutine builder takes care of:
         -   creating the channel
         -   closing the channel
-    -   With this we dont have to manually manage the channel
+    -   With this we don't have to manually manage the channel
     
 ```aidl
 @ExperimentalCoroutinesApi
@@ -488,6 +488,38 @@ fun produceNumbers() : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default)
     println("done")
 }
 ``` 
+
+### Pipelining Channels
+
+-   We can also join channels in order to pass on the data from one channel
+    -   The below code is an example where the **produceInfiniteNumbers()** channel output is sent to the **squareNumbers()** channel
+    
+```aidl
+@ExperimentalCoroutinesApi
+fun produceInfiniteNumbers() : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default).produce {
+    var x=1;
+    while(true){
+        send(x++)
+    }
+}
+
+fun squareNumbers(numbers : ReceiveChannel<Int>) : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default).produce {
+    for(x in numbers){
+        send(x*x)
+    }
+    println("done")
+}
+
+fun main() = runBlocking{
+
+    val producer = produceInfiniteNumbers()
+    val square = squareNumbers(producer)
+    for (i in 1..5) println("square numbers are :  ${square.receive()}")
+
+    square.cancel()
+    producer.cancel()
+}
+```
 
 ## Creating your own Local Scope
 
