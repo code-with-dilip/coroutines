@@ -405,6 +405,90 @@ fun main() = runBlocking {
 
 
 ```
+
+## Use Channels to Communicate between Coroutines
+
+-   Single Coroutine can communicate to us by using the deferred object.
+-   Coroutines can send to or receive from a channel
+    -   send() -> This is a blocking call which blocks the thread until the data is received
+    -   receive() -> This is a blocking call which blocks the thread until the data is recieved from the send call
+
+### Simple Send/Recieve Example
+
+-   In the below example we are sending 5 element and we are receiving 5 elements
+    -   We have hardcoded the values that will be sent and received by the channel
+     
+```
+fun main() = runBlocking {
+    val channel = Channel<Int>()
+    launch {
+        for ( x in 1..5){
+            log("sending $x")
+            channel.send(x)
+        }
+    }
+    repeat(5){
+        log("receive from channel ${channel.receive()}")
+    }
+}
+```
+
+### Closing Channels
+
+-   The channel class has a close() method using which we can close the channel
+
+```aidl
+channel.close()
+```
+
+-   How do we dynamically close the channel
+    -   We can iterate through the channel and it will retrieve the values that are available in the channel and releases the call once there are no data in the channel.
+
+```aidl
+fun main() = runBlocking {
+
+    val channel = Channel<Int>()
+    launch {
+        for ( x in 1..5){
+            log("sending $x")
+            channel.send(x)
+        }
+        log("Before closing the channel")
+        channel.close()
+    }
+    for (y in channel){
+        log("receive from channel $y")
+    }
+}
+```
+
+### Producer/Consumer CoroutineBuilder channel Functions
+
+-   There is a handy **produce** corouting builder which takes care of producing the elements
+    -   This coroutine builder takes care of:
+        -   creating the channel
+        -   closing the channel
+    -   With this we dont have to manually manage the channel
+    
+```aidl
+@ExperimentalCoroutinesApi
+fun main() = runBlocking{
+    val channel = produceNumbers()
+    channel.consumeEach {
+        println("Receiving : $it")
+    }
+}
+
+@ExperimentalCoroutinesApi
+fun produceNumbers() : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default).produce {
+    for(x in 1..5){
+        println("Sending : $x")
+        send(x)
+    }
+    println("done")
+}
+``` 
+
 ## Creating your own Local Scope
 
 ```aidl
