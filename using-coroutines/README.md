@@ -521,6 +521,44 @@ fun main() = runBlocking{
 }
 ```
 
+## Use Channels to Fan-Out and Fan-In
+
+### FanOut
+
+-   This is the concept of instantiating more consumers for a given channel
+
+```
+    repeat(5){consume(it, producer)} // fanout 5 consumers for a given channel
+
+```
+
+### FanIn
+
+-   This concept is just the opposite of FanOut. In this scenario we have multiple producers and one consumer
+
+```aidl
+suspend fun produce(channel : Channel<String>, msg : String, interval: Long){
+    while (true){
+        delay(interval)
+        channel.send(msg)
+    }
+}
+
+fun main() = runBlocking<Unit> {
+    val channel = Channel<String>()
+    launch(coroutineContext) {
+        produce(channel, "foo", 200L)
+    }
+    launch(coroutineContext) {
+        produce(channel, "bar", 200L)
+    }
+    repeat(6){
+        log(channel.receive())
+    }
+    coroutineContext.cancelChildren()
+}
+```
+
 ## Creating your own Local Scope
 
 ```aidl
