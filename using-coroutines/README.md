@@ -559,6 +559,28 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
+### Buffered Channel
+
+-   This is a concept where you can buffer the elements in the channel until the receiver is up and running and reads the data from the channel
+
+```aidl
+fun main() = runBlocking {
+    val channel = Channel<Int>(3) // channel buffer of size 3
+    val sender = launch(coroutineContext) {
+        repeat(10) {
+            log("sending $it")
+            channel.send(it)
+        }
+        channel.close()
+    }
+    delay(1000)
+    for (y in channel){
+        log("receive from channel $y")
+    }
+    log("cancel complete")
+}
+```
+
 ## Creating your own Local Scope
 
 ```aidl
