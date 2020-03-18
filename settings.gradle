@@ -2,4 +2,6 @@ rootProject.name = 'coroutines'
 include 'using-coroutines'
 
 include 'trying-out-coroutines'
+include 'test-coroutines'
+
 
