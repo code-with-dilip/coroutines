@@ -631,3 +631,9 @@ fun main() = runBlocking {
         job.join()
     }
 ```
+
+### Things to read
+
+-   When would you create your own Scope?
+-   Why we should not use GlobalScope?
+-   

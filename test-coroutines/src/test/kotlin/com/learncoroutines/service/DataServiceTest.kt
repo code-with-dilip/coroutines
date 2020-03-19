@@ -42,6 +42,34 @@ class DataServiceTest {
     }
 
     @Test
+    fun loadData_OwnScope() {
+
+        runBlockingTest {
+            val result = dataService.loadData_OwnScope()
+            assertEquals("DATA", result)
+
+        }
+    }
+
+    @Test
+    fun loadData_Scope() {
+
+        runBlockingTest {
+            val result = dataService.loadData_Scope()
+            assertEquals("DATA", result)
+
+        }
+    }
+
+    @Test
+    fun retrieveDataFromService() {
+        runBlockingTest {
+            val data = dataService.retrieveDataFromService(this)
+            assertEquals("ExternalCall", data)
+        }
+    }
+
+    @Test
     fun loadData_TimeOutException_approach2() {
         runBlockingTest {
             try {

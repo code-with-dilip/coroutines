@@ -6,9 +6,7 @@ import kotlinx.coroutines.runBlocking
 
 
 fun main() = runBlocking {
-
     val job = launch {
-
         println("isActive ? : ${coroutineContext[Job]!!.isActive}")
         println("coroutineContext : $coroutineContext")
     }
