@@ -1,5 +1,17 @@
 # Coroutine
 
+## What is a Co-Routine?
+
+- A Coroutine is something which can execute a piece of code in concurrent bits.
+    -   A **Co-Routine** provides a state for a function
+    -   A **Co-Routine** allows the code to have mutiple entry point.
+    -   CoRoutines can be thought of as a light weight objects
+    -   Basically they are state machine objects
+        -   Data for each state
+        -   index of the current state
+        -   Ability to wait patiently 
+
+
 ## Very First Coroutine
 
 -   The launch function is a coroutine builder.
@@ -7,7 +19,6 @@
 -   The **delay(1000)** function is a suspending function and it will delay the coroutine to execute after for 1second
     -   During this time, it releases the thread that was executing the launch coroutine
 -   The coroutine comes back to life after a second
-
 
 
 ```aidl
@@ -23,6 +34,7 @@ GlobalScope.launch {
 ## Running Coroutines using Coroutine Builder
 -   Coroutines can only be run inside a context 
 -   Coroutine Builder is fundamentally used to launch a **Coroutine context**.
+-   CoroutineBuilders are the bridges/entry-point to your suspendable code
 
 - Some Coroutine Builders are 
     -    launch 
@@ -299,6 +311,13 @@ outer.cancelAndJoin()
 ```aidl
     outer.cancelChildren()
 ```
+
+## What is a CoroutineScope?
+
+-   All Coroutines in a scope
+-   Scopes can cancel all coroutines
+-   Scopes get uncaught exceptions
+-   Use scopes to avoid leaks 
 
 ## Returning Data From Coroutines
 
