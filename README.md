@@ -1,66 +1,4 @@
-# Co-Routines
-
-## Why Asynchronous Programming is needed ?
-
--   In today's software development, its pretty common to make calls to multiple services and return a consolidated response.
--   The execution in general is top-down approach.
-
-**Example**  
-
--   In this example the code execution goes step by step and at each step the code execution is blocked and the thread executing the code waits for each step to complete.
-
-```aidl
-fun invokeService() {
-        val token = retrieveToken() //  1. calls and waits 
-        val result = this.externalCall(token) // 2. calls and waits
-        println("Result is $result") // final response
-    }
-```
-
-## How to avoid waiting time for each thread?
-
--   You have three options when it comes to avoiding waiting times
-    -   Thread Pool and assign a thread for each request
-    -   CallBacks
-    -   Futures/Promises/Rx
-
-### Thread Pool - Assign a Thread for each request
-
--   Make the code async and assign a thread to each call using a Thread Pool.
--   How many threads can we use in a Thread Pool ?
-     -  You cannot have many threads because threads typically occupy a memory of close to 1-2 MB.
-     
-### CallBacks
-
--   Make the code async by passing a callback to each call.
--   With CallBack things get messy and the code gets more verbose and code can get out of your hand pretty fast.
--   The very popular term is the **CallBack Hell** 
-
-### Future/Promises/Rx
-
--   The response will be wrapped in a Future
--   This is better and its composable.
--   Example is given below and this code still works very well. 
-```aidl
-    fun invokeServiceAsync() {
-        CompletableFuture.supplyAsync { retrieveToken() }
-            .thenAccept { token ->
-                CompletableFuture.supplyAsync  {
-                    val result = externalCall(token)
-                }
-            }
-    }
-```
-
-**DrawBack** 
--   In order to make your code async, you need to learn a totally different library in Kotlin.
--   But the issue here is you need to learn about all the combinators that are mentioned above **thenaccept**. But in reality there are more
-
-
-## Kotlin Co-Routines
-
--   Kotlin coroutines are going to let you write the code in a natural way.
--   Code looks like you writing the blocking code.
+# Coroutine
 
 ## What is a Co-Routine?
 
@@ -73,86 +11,648 @@ fun invokeService() {
         -   index of the current state
         -   Ability to wait patiently 
 
-### suspend functions
 
--   This is an indicator for Kotlin that this function will be executed asynchronously.
+## Very First Coroutine
+
+-   The launch function is a coroutine builder.
+    -   This launches a coroutine asynchronously in a different thread
+-   The **delay(1000)** function is a suspending function and it will delay the coroutine to execute after for 1second
+    -   During this time, it releases the thread that was executing the launch coroutine
+-   The coroutine comes back to life after a second
+
 
 ```aidl
-suspend fun invokeService() {
-        val token = retrieveToken()
-        val result = this.externalCall(token)
-        logger.info("Result is $result")
+GlobalScope.launch {
+        delay(1000) // This does not block the thread. Releases the thread and have the thread available to run other coroutines
+        println("WORLD")
     }
-```   
+    print("Hello, ")
 
-### CoroutineBuilders
+    sleep(1500)
+```
 
--   The normall way of invoking the coroutine using the **coroutine builder**
-    -   **launch{}** is basically a coroutine builder which behaves like a fire and forget call
-        -   This creates a coroutine and forget about it
-        -   The execution happens behind the scenes in a thread pool 
-    -   **async{}**
-        -   returns a value from a coroutine.
-        -   Use **async** when there is a value thats going to be returned from the coroutine.
-    -   **runBlocking{}**
-        -   This coroutinebuilder runs the coroutine in the context of the invoker thread.        
-    -   **future{}**
-        -   This is coroutinebuilder returns the **CompletableFuture**
+## Running Coroutines using Coroutine Builder
+-   Coroutines can only be run inside a context 
+-   Coroutine Builder is fundamentally used to launch a **Coroutine context**.
+-   CoroutineBuilders are the bridges/entry-point to your suspendable code
+
+- Some Coroutine Builders are 
+    -    launch 
+        -    Launches the coroutine and returns immediately
+    -   runBlocking - This is mainly used in the scope of testing or in the main function
+        -    Launches the coroutine and blocks the thread until the coroutine is executed.
+    
+### launch Coroutinebuilder
+
+-   The launch coroutinebuilder launches executes immediately
+-   This **launch** creates a coroutine and waiting to be executed and it will be scheduled on a thread  
+ 
 ```aidl
  GlobalScope.launch {
-        TokenRetrieverCoRoutine().invokeService()
+        delay(1000) // This does not block the thread.
+        println("WORLD")
+        //coroutine_100000()
     }
-```
-- Invoking coroutine in a loop. No special code is needed if corouteine is invoked in a loop.
+    print("Hello, ")
+```   
+ 
+-   The delay() code suspends the coroutine to the background and waits for the delay to be finish and then scheduled on a thread to execute the remaining piece of code.
+-   The delay() code does not block the thread. It releases the coroutine from the thread and have that available for other tasks to execute.
 
 ```aidl
-(0..9).forEach {
-        GlobalScope.launch {
-            TokenRetrieverCoRoutine().invokeService()
+delay(1000)
+```
+
+- Making the whole main() function to be a coroutineBuilder 
+    -   The whole function below is a nonblocking
+    
+    ```aidl
+           fun main() = runBlocking{
+           
+               launch {
+                   delay(1000) // This does not block the thread. Releases the thread and have the thread available to run other coroutines
+                   println("WORLD")
+                   //coroutine_100000()
+               }
+               print("Hello, ")
+                   dowork()
+           }
+           
+           suspend fun dowork() {
+           
+               delay(1500)
+           
+           }
+           ```
+
+## Wait, Join and Cancel Coroutines
+
+### Join Coroutine
+
+-   This is used to join multiple coroutines
+-   The code gets blocked until the all the joined coroutines are finished
+
+### Job Interface
+
+-   launch() returns a job
+-   The Job interface can be used to perform the below operation:
+    -    Join coroutines using the **join** method in the Job interface
+    -    Status of the coroutines ( finished, canclled or active)
+
+#### Join Example
+
+```aidl
+ runBlocking {
+
+        val job = launch {
+            delay(1000)
+            println("World")
         }
+        println("Hello , ")
+        job.join() // This waits until the coroutine completes.
     }
 ```
 
-## Kotlin's approach to async
+### Cancelling Coroutine
 
--   **suspend** -> Use suspending functions for sequential behavior
--   **async** ->   Use async for concurrent behavior
+-   What if a coroutine runs too long and you would like to cancel it
+    -   Cancelling a coroutine should take care of the following
+        -   Releasing any resources
+        -   Handling Exceptions    
+    -   Cancel a coroutine is coperative
+        -   All the inbuilt suspending functions are cooperative
+            -   delay
+            -   yield
+    
+#### Cancel Example
 
-## What is a CoRoutine?
+##### Approach 1
+-   job.cancel() and job.join() or job.cancelAndJoin() are the methods that are available as part of the job interface to perform cancel on a coroutine.
+ 
+```aidl
+    val job1 = launch {
+            repeat(1000) {
+                yield()
+                //delay(100)
+                print(".")
 
--   Coroutines are light weight threads.
--   Conceptually they are like threads
+            }
+        }        delay(2500)
+        /*job1.cancel()
+        job1.join()*/
+        job.cancelAndJoin()
+``` 
 
-### Coroutine vs Thread
+-   In the above the code, its the **delay()** or the **yield()** function that's co-operating with each other and perform the cancellation of coroutine.
+
+##### Approach 2
+
+- Using the isActive Flag to check the status of the coroutine. 
+```aidl
+  val job1 = launch {
+            repeat(1000) {
+               if(!isActive) throw CancellationException()
+                yield()
+                //delay(100)
+                print(".")
+               // Thread.sleep(1)
+
+            }
+        }
+        delay(10)
+        job1.cancelAndJoin()
+        println("done")
+    }
+```
+
+-   Replaced the delay in the launch coroutine with Thread.sleep(). Here in this case the **cancelAndJoin()** wont cancel the coroutine.
 
 ```aidl
-suspend fun coroutine_100000() {
-        val jobs = List(100_000) {
-            GlobalScope.launch {
-                delay(1000L)
+        val job1 = launch {
+            repeat(1000) {
+                Thread.sleep(100)
                 print(".")
             }
         }
-        jobs.forEach { it.join() }
-    }
+        delay(2500)
+        /*job1.cancel()
+        job1.join()*/
+        job.cancelAndJoin()
+```    
 
-```
+### Handling Exceptions in Coroutines
 
-**Thread**  
-
--   The below code will give this error **Exception in thread "main" java.lang.OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource limits reached**
--   It is really not possible to create **100_000** threads in a decent hardware and thats the reason for the exception 
+-   Always throw the CancellationException in case of cancelling a **coroutine**.
+-   Exceptions in coroutine can be handled by adding a **try/catch** block to the code
+-   Have the finally block in there incase of releasing any resources
 
 ```aidl
-fun thread_100000() {
-        val jobs = List(100_000) {
-            thread {
-                Thread.sleep(1000L)
-                print(".")
+ val job1 = launch {
+            try {
+                repeat(1000) {
+                    //if(!isActive) throw CancellationException()
+                    yield()
+                    //delay(100)
+                    print(".")
+                    // Thread.sleep(1)
+
+                }
+            } catch (ex: CancellationException) {
+                println("Cancellation exception : ${ex}")
+            } finally {
+                run {
+                    println("Close Resources if any")
+                }
             }
         }
-        jobs.forEach { it.join() }
-    }
+
 ```
 
+### Adding a Timeout to the coroutine
+
+-   **withTimeout** or **withTimeoutOrNull** are the two methods that can be used to timeout on a coroutine
+    -   withtimeout -> This throws an exception in the event of a timeout
+    -   withTimeoutOrNull -> This returns null once the time is elapsed.
+    
+#### Example: 
+```aidl
+fun main() {
+    runBlocking {
+        //val job = withTimeout(100) {
+        val job = withTimeoutOrNull(100) {
+            repeat(1000) {
+                yield()
+                print(".")
+                Thread.sleep(1)
+            }
+        }
+        delay(100)
+
+        if(job==null){
+            println("timed out")
+        }
+
+    }
+}
+```
+
+## CoroutineContext
+
+-   All Coroutines run as part of the CoroutineContext.
+    -   This determines how the coroutine is going to behave.
+    -   The CoroutineContext is created by the launcher.
+    -   The context provides a **dispatcher** which determines which Thread is going to run the coroutine
+-   The Context has the following Dispatcher has the following options  
+    -   UnConfined
+        -   This executes on the thread where the coroutine is executed
+        -   It switches to a different thread based on the suspending function thats used within the coroutine
+    -   coroutineContext
+    -   CommonPool
+    -   newSingleThreadContext
+    -   DefaultDispatcher
      
+### UnConfined
+-   This executes on the thread where the coroutine is executed
+-   It switches to a different thread based on the suspending function thats used within the coroutine
+
+```
+fun main() = runBlocking {
+    val jobs = arrayListOf<Job>()
+    jobs += launch(Dispatchers.Unconfined) {
+        println("coroutineContext : I am working in thread [${Thread.currentThread().name}]")
+        delay(100)
+        //yield()
+        println("coroutineContext : After Delay in thread [${Thread.currentThread().name}]")
+    }
+
+}
+```
+
+### Accessing a Job from coroutinecontext
+
+-   The **coroutinecontext** has the handy method to access the 
+
+```aidl
+val job = launch {
+        println("isActive ? : ${coroutineContext[Job]!!.isActive}")
+        println("coroutineContext : $coroutineContext")
+    }
+```
+
+### Parent-Child Coroutines
+
+-   Normally this relationship is established only when coroutines are nested.
+
+-   The only to establish the relationship is by passing the **coroutineContext** to the child coroutine.
+
+```aidl
+ val outer = launch { //outer coroutine
+        launch(coroutineContext) {//inner coroutine
+            repeat(1000) {
+                println("$it")
+                delay(1)
+            }
+        }
+
+    }
+    outer.join() // this will wait until the child coroutine completes its execution
+```
+
+#### Canceling the Coroutine in a parent/child relationship
+
+- Cancelling the parentcoroutine automatically cancels the child coroutine too
+
+```aidl
+outer.cancelAndJoin()
+```
+
+-   Cancelling just the children coroutine
+
+```aidl
+    outer.cancelChildren()
+```
+
+## What is a CoroutineScope?
+
+-   All Coroutines in a scope
+-   Scopes can cancel all coroutines
+-   Scopes get uncaught exceptions
+-   Use scopes to avoid leaks 
+
+## Returning Data From Coroutines
+
+-   Use **async** Coroutine Builder in case of getting the data from the coroutine builder
+-   **async** coroutine builder returns a **Deferred** object.
+    -   This coroutinebuilder invokes the function and returns immediately with the **Deffered** object
+-   **await()**
+    -   This function waits until the Deferred object completes and this is a blocked call.     
+
+```aidl
+fun main() {
+
+    val scope = CoroutineScope(Dispatchers.Default)
+    val job = scope.launch {
+        val r1 = async { doWorkOne() }
+
+        val r2 = async { doWorkTwo() }
+        log("result : ${r1.await() + r2.await()}")
+    }
+    runBlocking {
+        job.join()
+    }
+
+}
+``` 
+
+- **AsyncExample2**
+
+-   In this below example,
+    -   we have an **async** call and other is a regular method call inside the **coroutine**
+    -   **async** gets executed later after the regular method as per the code is designed 
+    -   The code gets executed concurrently
+
+```aidl
+suspend fun doWork(msg: String): String {
+    log("Working $msg ")
+    delay(300)
+    log("Working $msg")
+    return "Hello"
+}
+
+
+fun main() {
+
+    runBlocking {
+        val job = launch {
+            val r1 = async { doWork("First Job") }
+        }
+        doWork("Second Job")
+        job.join()
+    }
+
+}
+```
+
+### Make the whole function async
+
+```aidl
+fun main() {
+    val result = doWorkAsync("Hello")
+    runBlocking {
+        result.await()
+    }
+}
+
+fun doWorkAsync(msg: String)  : Deferred<String> =  CoroutineScope(Dispatchers.IO).async {
+    log("Started Working $msg ")
+    delay(300)
+    log("Completed Work $msg")
+    return@async "Hello"
+
+}
+```
+### Starting async Functions Lazily
+
+-   The actual coroutine gets executed only when we call the await method
+
+```aidl
+package com.learncoroutine.async
+
+import com.learncoroutine.context.log
+import kotlinx.coroutines.*
+
+
+suspend fun doWorkLazy(msg: String): String {
+    log("Working $msg ")
+    delay(200)
+    log("Completed Work $msg")
+    return "Hello"
+}
+
+
+fun main() = runBlocking {
+
+    val job = launch {
+        val result = async(start = CoroutineStart.LAZY) {
+            doWorkLazy("Hello")
+        }
+        result.await() // This executes the coroutine
+    }
+    job.join()
+    println("Completed")
+}
+
+
+```
+
+## Use Channels to Communicate between Coroutines
+
+-   Single Coroutine can communicate to us by using the deferred object.
+-   Coroutines can send to or receive from a channel
+    -   send() -> This is a blocking call which blocks the thread until the data is received
+    -   receive() -> This is a blocking call which blocks the thread until the data is recieved from the send call
+
+### Simple Send/Recieve Example
+
+-   In the below example we are sending 5 element and we are receiving 5 elements
+    -   We have hardcoded the values that will be sent and received by the channel
+     
+```
+fun main() = runBlocking {
+    val channel = Channel<Int>()
+    launch {
+        for ( x in 1..5){
+            log("sending $x")
+            channel.send(x)
+        }
+    }
+    repeat(5){
+        log("receive from channel ${channel.receive()}")
+    }
+}
+```
+
+### Closing Channels
+
+-   The channel class has a close() method using which we can close the channel
+
+```aidl
+channel.close()
+```
+
+-   How do we dynamically close the channel
+    -   We can iterate through the channel and it will retrieve the values that are available in the channel and releases the call once there are no data in the channel.
+
+```aidl
+fun main() = runBlocking {
+
+    val channel = Channel<Int>()
+    launch {
+        for ( x in 1..5){
+            log("sending $x")
+            channel.send(x)
+        }
+        log("Before closing the channel")
+        channel.close()
+    }
+    for (y in channel){
+        log("receive from channel $y")
+    }
+}
+```
+
+### Producer/Consumer channel CoroutineBuilder  Functions
+
+-   There is a handy **produce** corouting builder which takes care of producing the elements
+    -   This coroutine builder takes care of:
+        -   creating the channel
+        -   closing the channel
+    -   With this we don't have to manually manage the channel
+    
+```aidl
+@ExperimentalCoroutinesApi
+fun main() = runBlocking{
+    val channel = produceNumbers()
+    channel.consumeEach {
+        println("Receiving : $it")
+    }
+}
+
+@ExperimentalCoroutinesApi
+fun produceNumbers() : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default).produce {
+    for(x in 1..5){
+        println("Sending : $x")
+        send(x)
+    }
+    println("done")
+}
+``` 
+
+### Pipelining Channels
+
+-   We can also join channels in order to pass on the data from one channel
+    -   The below code is an example where the **produceInfiniteNumbers()** channel output is sent to the **squareNumbers()** channel
+    
+```aidl
+@ExperimentalCoroutinesApi
+fun produceInfiniteNumbers() : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default).produce {
+    var x=1;
+    while(true){
+        send(x++)
+    }
+}
+
+fun squareNumbers(numbers : ReceiveChannel<Int>) : ReceiveChannel<Int> = CoroutineScope(Dispatchers.Default).produce {
+    for(x in numbers){
+        send(x*x)
+    }
+    println("done")
+}
+
+fun main() = runBlocking{
+
+    val producer = produceInfiniteNumbers()
+    val square = squareNumbers(producer)
+    for (i in 1..5) println("square numbers are :  ${square.receive()}")
+
+    square.cancel()
+    producer.cancel()
+}
+```
+
+## Use Channels to Fan-Out and Fan-In
+
+### FanOut
+
+-   This is the concept of instantiating more consumers for a given channel
+
+```
+    repeat(5){consume(it, producer)} // fanout 5 consumers for a given channel
+
+```
+
+### FanIn
+
+-   This concept is just the opposite of FanOut. In this scenario we have multiple producers and one consumer
+
+```aidl
+suspend fun produce(channel : Channel<String>, msg : String, interval: Long){
+    while (true){
+        delay(interval)
+        channel.send(msg)
+    }
+}
+
+fun main() = runBlocking<Unit> {
+    val channel = Channel<String>()
+    launch(coroutineContext) {
+        produce(channel, "foo", 200L)
+    }
+    launch(coroutineContext) {
+        produce(channel, "bar", 200L)
+    }
+    repeat(6){
+        log(channel.receive())
+    }
+    coroutineContext.cancelChildren()
+}
+```
+
+### Buffered Channel
+
+-   This is a concept where you can buffer the elements in the channel until the receiver is up and running and reads the data from the channel
+
+```aidl
+fun main() = runBlocking {
+    val channel = Channel<Int>(3) // channel buffer of size 3
+    val sender = launch(coroutineContext) {
+        repeat(10) {
+            log("sending $it")
+            channel.send(it)
+        }
+        channel.close()
+    }
+    delay(1000)
+    for (y in channel){
+        log("receive from channel $y")
+    }
+    log("cancel complete")
+}
+```
+
+## Waiting on Multiple Coroutines using Select
+
+-   Select allows us to wait on multiple coroutines and  select the first one that becomes available.
+   
+```aidl
+@ExperimentalCoroutinesApi
+fun CoroutineScope.producer1() : ReceiveChannel<String> = produce {
+    while (true){
+        delay(100)
+        send("from producer 1")
+    }
+}
+
+@ExperimentalCoroutinesApi
+fun CoroutineScope.producer2() : ReceiveChannel<String> = produce<String> {
+    while (true){
+        delay(300)
+        send("from producer 2")
+    }
+}
+
+suspend fun selector(message1: ReceiveChannel<String>, message2: ReceiveChannel<String>){
+    select<Unit> {
+        message1.onReceive{value -> println(value)}
+        message2.onReceive{value -> println(value)}
+
+    }
+}
+
+fun main() = runBlocking {
+    val m1 = producer1()
+    val m2 = producer2()
+    repeat(15){
+        selector(m1,m2)
+    }
+}
+```
+
+## Creating your own Local Scope
+
+```aidl
+    suspend fun main(){
+    
+        val scope = CoroutineScope(Dispatchers.Default)
+        val job = scope.launch {
+            log("invoked inside localscopoe")
+        }
+        job.join()
+    }
+```
+
+### Things to read
+
+-   When would you create your own Scope?
+-   Why we should not use GlobalScope?
+-   
