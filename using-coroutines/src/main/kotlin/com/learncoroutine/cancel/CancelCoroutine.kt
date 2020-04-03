@@ -1,4 +1,4 @@
-package com.learncoroutine
+package com.learncoroutine.cancel
 
 import kotlinx.coroutines.*
 
@@ -7,7 +7,8 @@ fun main() {
     runBlocking {
         val job1 = launch {
             try {
-                repeat(1000) {
+                repeat(10) {
+                    delay(200)
                     //if(!isActive) throw CancellationException()
                     yield()
                     //delay(100)
@@ -25,8 +26,8 @@ fun main() {
         }
 
 
-        delay(10)
-        job1.cancelAndJoin()
+        delay(500)
+        job1.cancel()
         println("done")
     }
 }
