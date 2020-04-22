@@ -4,18 +4,18 @@
 
 - A Coroutine is something which can execute a piece of code in concurrent bits.
     -   A **Co-Routine** provides a state for a function
-    -   A **Co-Routine** allows the code to have mutiple entry point.
+    -   A **Co-Routine** allows the code to have multiple entry point.
     -   CoRoutines can be thought of as a light weight objects
     -   Basically they are state machine objects
         -   Data for each state
         -   index of the current state
         -   Ability to wait patiently 
-
+-   By Default, coroutine is launched eagerly.    
 
 ## Very First Coroutine
 
 -   The launch function is a coroutine builder.
-    -   This launches a coroutine asynchronously in a different thread
+    -   This launches a coroutine asynchronously in a different thread    
 -   The **delay(1000)** function is a suspending function and it will delay the coroutine to execute after for 1second
     -   During this time, it releases the thread that was executing the launch coroutine
 -   The coroutine comes back to life after a second
@@ -30,6 +30,35 @@ GlobalScope.launch {
 
     sleep(1500)
 ```
+## What is a CoroutineScope?
+
+-   All Coroutines should be run in a scope.
+    -   Keeps track of all the coroutines
+    -   Scopes can cancel all coroutines that got created under it
+    -   Scopes get notified when uncaught exceptions happens
+    -   Use scopes to avoid leaks
+-   This is the entry point to your coroutine.     
+    
+### How to create a CoroutineScope ?
+
+#### Approach 1
+
+-   The below creates a scope with the with the defaults 
+
+```aidl
+   val scope = CoroutineScope(Job())
+
+```
+
+#### Approach 2
+
+-   The below creates a scope with the with the values defined in the arguments passed to it
+    -   The dispatcher for the scope is IO. So everything will be run in the IO thread.
+
+```aidl
+    val scope1 = CoroutineScope(Job() + Dispatchers.IO + CoroutineName("hi"))
+
+```    
 
 ## Running Coroutines using Coroutine Builder
 -   Coroutines can only be run inside a context 
@@ -85,6 +114,18 @@ delay(1000)
            }
            ```
 
+## What is a suspending function?
+
+-   A suspending function suspends its execution until the data is ready and continues further.
+-   In this below example, the function suspends its execution for 100 ms and once the time exhausts then it going to execute the code following the delay() call.
+
+```aidl
+suspend fun soFun(){
+    delay(100)
+    println("soFun")
+}
+```
+
 ## Wait, Join and Cancel Coroutines
 
 ### Join Coroutine
@@ -95,9 +136,12 @@ delay(1000)
 ### Job Interface
 
 -   launch() returns a job
+
 -   The Job interface can be used to perform the below operation:
+    -   The **Job** provides lifecycle. The **Job** provides you the handle of the coroutine. 
+    -    Status of the coroutines ( active, finished, canclled or )
     -    Join coroutines using the **join** method in the Job interface
-    -    Status of the coroutines ( finished, canclled or active)
+    
 
 #### Join Example
 
@@ -145,26 +189,57 @@ delay(1000)
 
 -   In the above the code, its the **delay()** or the **yield()** function that's co-operating with each other and perform the cancellation of coroutine.
 
-##### Approach 2
+##### Approach 2 using isAcive or ensureActive()
 
-- Using the isActive Flag to check the status of the coroutine. 
+- Using the isActive Flag or ensureActive() to check the status of the coroutine. This is very useful to make the coroutine to be cooperative if you have used 
+functions that are not cooperative.
+ 
 ```aidl
-  val job1 = launch {
-            repeat(1000) {
-               if(!isActive) throw CancellationException()
-                yield()
-                //delay(100)
-                print(".")
-               // Thread.sleep(1)
-
-            }
-        }
-        delay(10)
-        job1.cancelAndJoin()
-        println("done")
-    }
+  fun main() {
+      runBlocking {
+          val scope = CoroutineScope(Job())
+          val job = scope.launch {
+              repeat(5 ) {
+                  sleep(100)
+                  //if(isActive) // this makes the coroutines to behave as cooperative
+                    ensureActive() // this makes the coroutines to behave as cooperative
+                          print("$it")
+              }
+          }
+  //        delay(500)
+          delay(200)
+          job.cancel()
+          println("job cancelled")
+      }
+      sleep(1000)
+  }
 ```
 
+
+#### Approach3 using yield()
+
+-   **yield()** is mainly used in cpu intensive tasks that may exhaust the thread pool
+    - This also checks whether the coroutine was cancelled. If yes this throws the cancellation exception  
+
+```aidl
+fun main() {
+    runBlocking {
+        val scope = CoroutineScope(Job())
+        val job = scope.launch {
+            repeat(5) {
+                delay(100)
+                yield()
+                print("$it")
+            }
+        }
+//        delay(500)
+        delay(300)
+        job.cancel()
+        println("job cancelled")
+    }
+    sleep(1000)
+}
+```
 -   Replaced the delay in the launch coroutine with Thread.sleep(). Here in this case the **cancelAndJoin()** wont cancel the coroutine.
 
 ```aidl
@@ -186,6 +261,8 @@ delay(1000)
 -   Exceptions in coroutine can be handled by adding a **try/catch** block to the code
 -   Have the finally block in there incase of releasing any resources
 
+#### Approach 1 - using try/catch/finally block
+
 ```aidl
  val job1 = launch {
             try {
@@ -206,6 +283,38 @@ delay(1000)
             }
         }
 
+```
+
+#### Approach 2 - using try/catch/finally and withContext block
+
+```aidl
+fun main() {
+
+    runBlocking {
+        val job1 = launch {
+            try {
+                repeat(10) {
+                    delay(200)
+                    yield()
+                    print("$it")
+                }
+            } catch (ex: CancellationException) {
+                println("Cancellation exception : ${ex}")
+            } finally {
+                println("Close Resources if any")
+                //this is a special suspending function which takes care changing the context first
+                // Noncancellable is a check with is always active irrespective of the coroutine was cancelled.
+                withContext(NonCancellable){
+                    delay(100)
+                    println("Close Resources if any after delay")
+                }
+            }
+        }
+        delay(500)
+        job1.cancel()
+        println("done")
+    }
+}
 ```
 
 ### Adding a Timeout to the coroutine
@@ -236,12 +345,31 @@ fun main() {
 }
 ```
 
+## Handling RunTime Exceptions in Coroutines
+
+
 ## CoroutineContext
 
 -   All Coroutines run as part of the CoroutineContext.
     -   This determines how the coroutine is going to behave.
     -   The CoroutineContext is created by the launcher.
     -   The context provides a **dispatcher** which determines which Thread is going to run the coroutine
+-   What are the elements does the CoroutineContext have ?
+    -   CoroutineDispatcher -> Threading
+    -   Job -> LifeCycle
+    -   CoroutineExceptionHandler
+    -   CoroutineName  
+-   A new coroutine inherits the parent context.    
+
+### CoroutineContext Defaults
+
+-   CoroutineDispatcher -> Dispatchers.Default
+-   Job -> No Parent Job
+-   CoroutineExceptionHandler -> None
+-   CoroutineName -> "coroutine"  
+      
+
+### CoroutineDispatcher
 -   The Context has the following Dispatcher has the following options  
     -   UnConfined
         -   This executes on the thread where the coroutine is executed
@@ -312,12 +440,7 @@ outer.cancelAndJoin()
     outer.cancelChildren()
 ```
 
-## What is a CoroutineScope?
 
--   All Coroutines in a scope
--   Scopes can cancel all coroutines
--   Scopes get uncaught exceptions
--   Use scopes to avoid leaks 
 
 ## Returning Data From Coroutines
 
@@ -421,9 +544,19 @@ fun main() = runBlocking {
     job.join()
     println("Completed")
 }
-
-
 ```
+
+## suspend vs async
+
+| suspend  | async |
+| ------------- | ------------- |
+| Creates a coroutine | Creates a coroutine   |
+| Fire and Forget  | Returns a value  |
+| Takes a dispatcher  | Takes a dispatcher  |
+| Executed in a scope  | Executed in a scope  |
+| Not a suspend function  | Not a suspend function |
+| Rethrows exception | Holds on to the exception until await is called |
+
 
 ## Use Channels to Communicate between Coroutines
 

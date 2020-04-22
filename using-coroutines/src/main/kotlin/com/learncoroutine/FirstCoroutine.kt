@@ -36,6 +36,7 @@ suspend fun coroutine_100000() {
 
 }
 
+
 fun main() {
 
     GlobalScope.launch {

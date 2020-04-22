@@ -2,14 +2,33 @@
 
 Corotines uses the Continuation Passing Style Code(CPS)
 
--   Any Suspending Function resolve to **Continuation**. Continuation is a new term in Kotlin
--   How does the Kotlin Compiler resolves the code to CPS?
-    
+-   Any Suspending Function resolve to **Continuation**. 
+-   Continuation is a new term in Kotlin
+-   How does the Kotlin Compiler resolves the code to CPS?    
 
 ## What is a Continuation?
 
 -   Continuation is nothing but callbacks.
 -   Each suspension point resolves to a continuation
+
+### Suspending Function to Continuation
+
+```aidl
+suspend fun loadData(){
+    val data = networkRequest()
+    show data()
+}
+```
+
+- Continuation
+
+```aidl
+fun loadData(continuation: Continuation){ 
+    val data = networkRequest(continuation)
+    show(data)
+}
+
+```
 
 ### Types of Continuation
 -   Initial Continuation - The time when the suspending function got invoked
@@ -21,6 +40,19 @@ Corotines uses the Continuation Passing Style Code(CPS)
         -   ResumeWithException
 
 ##  How does the Kotlin Compiler resolves the code to CPS?
+
+- Sample Suspending function
+```aidl
+    suspend fun invokeService() {
+    val token = withContext(Dispatchers.Default) {
+                retrieveToken()
+            }
+      val result = withContext(Dispatchers.Default) {
+                externalCall(token)
+            }
+        logger.info("Result is $result")
+    }
+```
 
 -   It first analyses the code and label each suspension points
 -   It labels the suspension points first as you can see below.    
