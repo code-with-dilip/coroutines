@@ -1,3 +1,5 @@
+package com.learncoroutines.domain
+
 import com.learncoroutines.domain.Airport
 import io.kotlintest.TestCase
 import io.kotlintest.TestResult
