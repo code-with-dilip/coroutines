@@ -18,5 +18,9 @@ open class AirportService {
         throw RuntimeException("Not Implemented Yet for $code")
     }
 
+    fun fetchData(): String {
+        throw RuntimeException("Exception Occurred")
+    }
+
 
 }

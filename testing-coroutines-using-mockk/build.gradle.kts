@@ -16,6 +16,9 @@ dependencies {
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.1")
     testImplementation("io.mockk:mockk:1.9")
 
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.7")
+
+
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.5.1")
     testRuntimeOnly ("org.junit.vintage:junit-vintage-engine:5.5.1")
     testImplementation("org.codehaus.groovy:groovy-all:$groovyVersion")

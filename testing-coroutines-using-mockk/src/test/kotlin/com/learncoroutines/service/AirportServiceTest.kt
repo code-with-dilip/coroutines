@@ -4,8 +4,9 @@ import com.learncoroutines.domain.Airport
 import io.mockk.coEvery
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -14,7 +15,7 @@ class AirportServiceTest {
 
     val airport = mockk<Airport>()
     val airportService = mockk<AirportService>()
-    val airportClient = AirportClient(airport,airportService)
+    val airportClient = AirportClient(airport, airportService)
     val iad = Airport("IAD", "Dulles", true)
 
     @Test
@@ -22,12 +23,10 @@ class AirportServiceTest {
 
         coEvery { airportService.getAirportData("IAD") } returns iad
 
-        runBlocking {
+        runBlocking() {
             val airport = airportClient.getAirportStatusAsync("IAD")
             assertNotNull(airport)
             println("airport $airport")
         }
-
-
     }
 }
