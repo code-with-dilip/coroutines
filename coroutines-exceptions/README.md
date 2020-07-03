@@ -61,3 +61,37 @@ job.start()
 | CoroutineExceptionHandler  | Handling exceptions in coroutine |none  |
 | name  | Name of the coroutine  | coroutine  |
 
+-   A new coroutine inherits its parent context
+-   The parent context of the new coroutine is explained using the below formula
+```aidl
+Parent context = Defaults + inherited CoroutineContext + arguments
+```
+-   The arguments passed in the coroutine builder override the inherited context
+-   The **coroutineContext** of the coroutine
+```
+coroutineContext = parentContext+Job()
+``` 
+
+## ParentCoroutine Scope
+
+-   ParentScope has the capability to track all the coroutines
+
+### Cancelling a Scope
+
+-   Cancellation from the parent scope triggers the cancellation of all child coroutines
+```
+
+    val parentScope = CoroutineScope(Job())
+    val firstJob = parentScope.launch {
+        println("first")
+    }
+    val secondJob = parentScope.launch {
+        println("second")
+    }
+
+    parentScope.cancel()
+```
+
+### CancellationException ( Happens only in mobile world)
+-   This is a special exception to differentiate between a cancellation and other exception thrown
+
