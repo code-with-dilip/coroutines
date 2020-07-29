@@ -95,3 +95,34 @@ coroutineContext = parentContext+Job()
 ### CancellationException ( Happens only in mobile world)
 -   This is a special exception to differentiate between a cancellation and other exception thrown
 
+## Handling Exceptions
+-   Exception happens when a coroutine or a computation fails
+-   Anytime a child throws an exception
+    -   Exception gets propagated to the scope
+    -   Scope gets cancelled  
+    -   All the children coroutines will be cancelled
+    -   No more coroutines can be created on a cancelled scope
+
+### Supervisor Job
+-   Any exception that happens on a child coroutine won't affect the scope
+-   UnCaught Exceptions are propagated up and its going to cancel the scope
+
+## How to deal with Exceptions     
+-   There are two categories when it comes to exception handling
+    -   Thrown -> Launch
+    -   Exposed -> Async
+        -   Exception is thrown only after await() is invoked   
+-   These are the options that we have when it comes to handling exceptions
+
+### Exceptions in Async
+
+- Check the **ExceptionCoroutine** class
+-   Exceptions are only thrown only after await() call is made
+
+```angular2
+    val world = scope.async { exceptionCoroutine.world() }
+    print(world.await()) // This throws the exception
+```
+
+
+### Exceptions in Launch 
