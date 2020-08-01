@@ -46,6 +46,11 @@ GlobalScope.launch {
 ```
 javap -c LocationAPICallUsingCoroutines 
 ```
+
+## How Coroutines are executed in the JVM ?
+
+-   **CoroutineSchedulers** is the class that takes executing the tasks submitted to the queue   
+    
 ## What is a CoroutineScope?
 
 -   All Coroutines should be run in a scope.

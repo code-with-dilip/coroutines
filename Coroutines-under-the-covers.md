@@ -137,5 +137,3 @@ val sm = object: CoroutineImple{
 
 -   CoroutineContext is mainly used to control the thread execution of a given coroutine
 
-## Kotlin Coroutines in Practice
-
