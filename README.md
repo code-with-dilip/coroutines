@@ -31,6 +31,26 @@ GlobalScope.launch {
 
     sleep(1500)
 ```
+
+## Generate the ByteCode for coroutines
+
+-   Build the project (./gradlew build)
+
+-   Navigate to the build directory. Sample given below
+
+```windows
+/Users/z001qgd/Dilip/lightning-talks/coroutines-talk/code-base/couroutines-talk/build/classes/kotlin/main/com/learncoroutines
+```
+-   Run this command as below. Ignore **Kt.class** file with the same name
+
+```
+javap -c LocationAPICallUsingCoroutines 
+```
+
+## How Coroutines are executed in the JVM ?
+
+-   **CoroutineSchedulers** is the class that takes executing the tasks submitted to the queue   
+    
 ## What is a CoroutineScope?
 
 -   All Coroutines should be run in a scope.
