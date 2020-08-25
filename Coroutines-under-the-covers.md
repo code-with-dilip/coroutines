@@ -1,6 +1,6 @@
 # Coroutines Under the Covers
 
-Corotines uses the Continuation Passing Style Code(CPS)
+Coroutines uses the Continuation Passing Style Code(CPS)
 
 -   Any Suspending Function resolve to **Continuation**. 
 -   Continuation is a new term in Kotlin
@@ -13,11 +13,14 @@ Corotines uses the Continuation Passing Style Code(CPS)
 
 ### Suspending Function to Continuation
 
+- When Kotlin Compiler compiles the supsending function it converts to a continuation
+ 
 ```aidl
-suspend fun loadData(){
-    val data = networkRequest()
-    show data()
-}
+suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
+        val token = coroutineScope.async(Dispatchers.IO) { getToken() }
+        val data = coroutineScope.async(Dispatchers.IO) {  invokeService(token.await()) }
+        return data.await()
+ }
 ```
 
 - Continuation
