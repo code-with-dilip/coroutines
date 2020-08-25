@@ -8,7 +8,19 @@ Coroutines uses the Continuation Passing Style Code(CPS)
 
 ## What is a Continuation?
 
--   Continuation is nothing but callbacks.
+-   A continuation is a generic callback interface with the following:
+    -   context
+        -   CoroutineContext
+    -   resumeWith
+        -   Either provide the result or the function
+
+```kotlin
+public interface Continuation<in T> {
+    public val context: CoroutineContext
+    public fun resume(value: T)
+    public fun resumeWithException(exception: Throwable)
+}
+```
 -   Each suspension point resolves to a continuation
 
 ### Suspending Function to Continuation
@@ -23,15 +35,34 @@ suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
  }
 ```
 
-- Continuation
+- The kotlin compiled code will look like below with the additional **Continuation** parameter to the function.
 
+```kotlin
 ```aidl
-fun loadData(continuation: Continuation){ 
-    val data = networkRequest(continuation)
-    show(data)
-}
+    suspend fun retrieveItem(coroutineScope: CoroutineScope, continuation: Continuation<String>): String {
+        val sm = object: CoroutineImple{...} // sm gets initialized
+            //label 0
+        switch(label){
+            case 0:
+                sm.label = 1 //next invocation label value
+                val token = coroutineScope.async(Dispatchers.IO) { getToken(sm) } //sm is aded as an argument, when finished call us back
+            case 1:
+            val data = coroutineScope.async(Dispatchers.IO) {  invokeService(token.await(),sm) //sm is aded as an argument
+            return data.await()
+           }
+        }
+     }
+```  
+### How it works ?
 
+-   THe first thing that happens is a state machine gets initialized
+
+```kotlin
+        val sm = object: CoroutineImple{...} // sm gets initialized
 ```
+-   The sm gets passed to all the suspending function as an argument. Check the example above
+-   When getToken() finishes, it invokes the resume() in the continuation which in-turn invokes the retrieveItem(this) with the next label
+-   Process continues until all the labels are invikes
 
 ### Types of Continuation
 -   Initial Continuation - The time when the suspending function got invoked
@@ -39,101 +70,86 @@ fun loadData(continuation: Continuation){
 -   What does a continuation have?
     -   The continuation has the following: This is similar to a callback.
         -   Context
-        -   Resume
-        -   ResumeWithException
-
+        -   resume
+        -   resumeWithException
+        
+        
 ##  How does the Kotlin Compiler resolves the code to CPS?
-
-- Sample Suspending function
-```aidl
-    suspend fun invokeService() {
-    val token = withContext(Dispatchers.Default) {
-                retrieveToken()
-            }
-      val result = withContext(Dispatchers.Default) {
-                externalCall(token)
-            }
-        logger.info("Result is $result")
-    }
-```
 
 -   It first analyses the code and label each suspension points
 -   It labels the suspension points first as you can see below.    
-    ```aidl
-    suspend fun invokeService() {
-        // label 0
-        val token = withContext(Dispatchers.Default) {
-            retrieveToken()
-        }
-        // label 1
-        val result = withContext(Dispatchers.Default) {
-            externalCall(token)
-        }
-        logger.info("Result is $result")
-    }
-    ```          
+
+```aidl
+    suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
+            //label 0
+            val token = coroutineScope.async(Dispatchers.IO) { getToken() }
+            //label 1
+            val data = coroutineScope.async(Dispatchers.IO) {  invokeService(token.await()) }
+            return data.await()
+     }
+```
 -   The next step the compiler does is to convert the code to a something like a switch case
 
 ```aidl
-suspend fun invokeService() {
-    switch(label){
-    case0:
-        val token = withContext(Dispatchers.Default) {
-            retrieveToken()
-        }        
-    case1:
-        val result = withContext(Dispatchers.Default) {
-            externalCall(token)
+    suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
+            //label 0
+        switch(label){
+            case 0:
+                val token = coroutineScope.async(Dispatchers.IO) { getToken() }
+            case 1:
+            val data = coroutineScope.async(Dispatchers.IO) {  invokeService(token.await())
+            return data.await()
+           }
         }
-    }
+     }
+```  
+### State Machine
 
-}
-```    
-
--   The next step the compile does is that it creates a state for the suspending function
+-   The next step the compiler does is that it creates a state for the suspending function
     -   The state object maintains the current executing label and where to go next.
 ```aidl
-suspend fun invokeService() {
-val sm = object: CoroutineImple{...}
-    switch(label){
-    case0:
-        sm.label = 1
-        val token = withContext(Dispatchers.Default) {
-            retrieveToken()
-        }        
-    case1:
-        val result = withContext(Dispatchers.Default) {
-            externalCall(token)
+    suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
+        val sm = object: CoroutineImple{...} // sm gets initialized
+            //label 0
+        switch(label){
+            case 0:
+                val token = coroutineScope.async(Dispatchers.IO) { getToken(sm) } //sm is aded as an argument
+            case 1:
+            val data = coroutineScope.async(Dispatchers.IO) {  invokeService(token.await(),sm) //sm is aded as an argument
+            return data.await()
+           }
         }
-    }
+     }
+```  
 
-}
-```
-### State Machine
--   The state machine is passed as an argument to the first suspending function
+-   The state machine is passed as an argument to the first suspending function and invoke the state machine when done with your execution
+    -   This is nothing, but the continuation which has the **resumeWith** function
 -   The advantage of State Machine over callbacks is that the same object gets reused for every suspension point.
      -  Callbacks creates a new closure everytime you have to pass on to the next step in the code execution.
 
 ```aidl
-suspend fun invokeService() {
-val sm = object: CoroutineImple{
-            fun resume(...){
-                invokeService(this) // sm knows which case block in label to invoke 
-            }
+    suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
+        val sm = object: CoroutineImple{...} // sm gets initialized
+            //label 0
+        switch(label){
+            case 0:
+                sm.label = 1 //next invocation label value
+                val token = coroutineScope.async(Dispatchers.IO) { getToken(sm) } //sm is aded as an argument, when finished call us back
+            case 1:
+            val data = coroutineScope.async(Dispatchers.IO) {  invokeService(token.await(),sm) //sm is aded as an argument
+            return data.await()
+           }
         }
-    switch(label){
-    case0:
-        sm.label = 1 // this saves the state
-        val token = withContext(Dispatchers.Default) {
-            retrieveToken(sm) // sm is passed as an argument which has the callback to invoke the **invokeService** function
-        }        
-    case1:
-        val result = withContext(Dispatchers.Default) {
-            externalCall(token)
-        }
-    }
+     }
+```  
 
-}
+-   When the below code completes then the **resumeWith** gets invoked in the **ContinuationImpl**
+    -   Which will invoke the **retrieveItem** function again with the new label 
+
+```kotlin
+ case 0:
+    sm.label = 1 //next invocation label value
+    val token = coroutineScope.async(Dispatchers.IO) { getToken(sm) } //sm is aded as an argument, when finished call us back
 ```
 
 ## What is a CoroutineContex?
