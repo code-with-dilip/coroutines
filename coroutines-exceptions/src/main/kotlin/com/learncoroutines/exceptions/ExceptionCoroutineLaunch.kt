@@ -5,12 +5,12 @@ import java.lang.RuntimeException
 
 class ExceptionCoroutineLaunch {
 
-    fun hello(){
+    fun hello() {
         println("hello")
     }
 
     fun world() {
-       // println("world")
+        // println("world")
         throw RuntimeException("Exception Occurred")
     }
 }
@@ -18,15 +18,15 @@ class ExceptionCoroutineLaunch {
 fun main() {
 
     runBlocking {
-        val exceptionCoroutine = ExceptionCoroutineLaunch()
         val scope = CoroutineScope(Job())
-        scope.launch { exceptionCoroutine.hello() }
-        try{
-          val job =  scope.launch { exceptionCoroutine.world() }
-            job.join()
-        }catch (e: Exception){
-            println("Exception handled")
+        scope.launch {
+            delay(200)
+            println("hello")
         }
-
+        scope.launch {
+            throw RuntimeException("Exception Occurred")
+        }
+        delay(3000)
+        println("After Delay")
     }
 }

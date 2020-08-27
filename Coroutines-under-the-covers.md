@@ -23,7 +23,7 @@ public interface Continuation<in T> {
 ```
 -   Each suspension point resolves to a continuation
 
-### Suspending Function to Continuation
+### Suspending Function to Continuation - How it works ?
 
 - When Kotlin Compiler compiles the supsending function it converts to a continuation
  
@@ -53,7 +53,6 @@ suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
         }
      }
 ```  
-### How it works ?
 
 -   THe first thing that happens is a state machine gets initialized
 
@@ -62,7 +61,45 @@ suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
 ```
 -   The sm gets passed to all the suspending function as an argument. Check the example above
 -   When getToken() finishes, it invokes the resume() in the continuation which in-turn invokes the retrieveItem(this) with the next label
--   Process continues until all the labels are invikes
+-   Process continues until all the labels are invoked
+
+## How Await() works ?
+
+- await() concept is implemented using the **suspendCoroutine**
+    -   When **await()** is invoked then it returns immediately(Check 16:43)
+-   suspendCoroutine{}
+    -   This is a suspending function   
+    -   Inside the lamda it accept the regular code that does not have a suspend modifier
+    -   This is just a opposite of coroutinebuilder
+        -   launch{} -> This call returns immediately
+        -   But the argument to the lamda body is a regular function
+        ```kotlin
+                suspend fun hello() = suspendCoroutine<String> {
+                        "Hello"
+                    }            
+        ```        
+
+## What is a CoroutineContex?
+
+-   CoroutineContext is mainly used to control the thread execution of a given coroutine
+-   This is just a map of elements and each element has a key
+-   ContextInterceptor is used to handle the thread contention
+    -   This is an interceptor which takes in a **continuation** and returns a **continuation**
+
+-   Accessing elements in the CoroutineContext 
+
+```kotlin
+    val job = coroutineContext[Job]
+    val interceptor = coroutineContext[CoroutineInteceptior]
+```           
+
+## Communicating Sequential Processes (CSP)
+-   It's a style of programming
+    
+
+    
+
+## Step by Step from suspending function to Continuation
 
 ### Types of Continuation
 -   Initial Continuation - The time when the suspending function got invoked
@@ -151,8 +188,4 @@ suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
     sm.label = 1 //next invocation label value
     val token = coroutineScope.async(Dispatchers.IO) { getToken(sm) } //sm is aded as an argument, when finished call us back
 ```
-
-## What is a CoroutineContex?
-
--   CoroutineContext is mainly used to control the thread execution of a given coroutine
 

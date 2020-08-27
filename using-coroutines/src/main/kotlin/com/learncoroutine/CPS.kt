@@ -2,8 +2,13 @@ package com.learncoroutine
 
 import com.learncoroutine.context.log
 import kotlinx.coroutines.*
+import kotlin.coroutines.suspendCoroutine
 
 class CPS {
+
+    suspend fun hello() = suspendCoroutine<String> {
+        "Hello"
+    }
 
     suspend fun retrieveItem(coroutineScope: CoroutineScope): String {
         val token = coroutineScope.async(Dispatchers.IO) { getToken() }
