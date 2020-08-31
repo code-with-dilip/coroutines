@@ -99,12 +99,14 @@ coroutineContext = parentContext+Job()
 -   Exception happens when a coroutine or a computation fails
 -   Anytime a child throws an exception
     -   Exception gets propagated to the scope
-    -   Scope gets cancelled  
     -   All the children coroutines will be cancelled
+    -   Scope also gets cancelled  
     -   No more coroutines can be created on a cancelled scope
-
+-   The actual code is that handles the exception is present in the **JobSupport.Kt**
+    -   childCancelled function() gets invoked in case of an error.
 ### Supervisor Job
 -   Any exception that happens on a child coroutine won't affect the scope
+-   It does not propogate the exception and it does not handle the exception too
 -   UnCaught Exceptions are propagated up and its going to cancel the scope
 
 ## How to deal with Exceptions     
